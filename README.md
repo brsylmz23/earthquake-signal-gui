@@ -29,23 +29,13 @@ Interactive GUI for earthquake signal analysis from MATLAB (.mat) files. Provide
 
 ## Quick Start
 
-1) Install dependencies
-```bash
-pip install -r requirements.txt
-```
-
-2) Add your `.mat` files to `sample_data/`
-- At least 5 recordings are recommended
-- The app defaults to `sample_data/` as the data folder
-
-3) Launch the app
-```bash
-python earthquake_signal_gui.py
-```
+- Install the dependencies listed in `requirements.txt` in your Python environment.
+- Place your `.mat` files in the `sample_data/` folder (5+ recordings recommended).
+- Launch the application by running the main Python script (`earthquake_signal_gui.py`).
 
 ## Screenshot
 
-![GUI Screenshot](assets/screenshot.png)
+![GUI Screenshot](assets/screenshot.png?raw=1&v=2)
 
 If the image does not render on GitHub, ensure the file exists at `assets/screenshot.png` and is committed.
 
@@ -112,12 +102,9 @@ Notes:
 
 ## Troubleshooting
 
-- Map not showing: verify `cartopy` install and system libs (GEOS/PROJ). On macOS:
-  ```bash
-  brew install geos proj
-  ```
+- Map not showing: verify `cartopy` installation and required system libraries (GEOS/PROJ) via your package manager.
 - No files listed: `.mat` files must be under `sample_data/` with the expected fields.
-- Excel button produces no file: check write permissions and `openpyxl` is installed.
+- Excel button produces no file: verify write permissions and that `openpyxl` is installed.
 
 ## License
 
