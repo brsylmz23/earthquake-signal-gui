@@ -196,7 +196,7 @@ def update_file_list_with_status():
         else:
             dpg.set_value("File List", display_files[0])
 
-DEFAULT_FOLDER = "sample_data"
+DEFAULT_FOLDER = "/Applications/Projects/DeepEQ/Datasets/saved"
 selected_file = [None]
 signals = [None]
 detrended_signals = [None]  # Store detrended versions for visualization
