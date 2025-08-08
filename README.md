@@ -4,117 +4,121 @@
 [![GUI](https://img.shields.io/badge/GUI-DearPyGui-ff69b4.svg)](https://github.com/hoffstadt/DearPyGui)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Gelişmiş deprem sinyali analizi için interaktif bir GUI. MATLAB (.mat) dosyalarından P/S pick, polarite, azimut ve epicenter tahmini; Türkiye haritası üzerinde görselleştirme ve Excel çıktısı.
+Interactive GUI for earthquake signal analysis from MATLAB (.mat) files. Provides P/S picking, polarity, azimuth, S–P distance, epicenter estimation on a Turkey map, and Excel export.
 
 ---
 
-- [Özellikler](#özellikler)
-- [Hızlı Başlangıç](#hızlı-başlangıç)
-- [Ekran Görüntüsü](#ekran-görüntüsü)
-- [Veri Formatı ve Örnekler](#veri-formatı-ve-örnekler)
-- [Dizin Yapısı](#dizin-yapısı)
-- [Teknik Notlar](#teknik-notlar)
-- [Roadmap](#roadmap)
-- [FAQ](#faq)
-- [English Summary](#english-summary)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Screenshot](#screenshot)
+- [Data Format](#data-format)
+- [Original vs Calculated](#original-vs-calculated)
+- [Directory Structure](#directory-structure)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
-## Özellikler
+## Features
 
-- Çoklu kanal (North, East, Up) sinyal görselleştirme
-- P/S dalga işaretleme (drag-line) ve otomatik senkronizasyon
-- P polarite tespiti ve olay azimutu hesaplama
-- S-P mesafesi ve epicenter tahmini (harita üzerinde)
-- Dosya arama/filtreleme ve durum göstergeleri (P/S mevcut mu)
-- Toplu Excel çıktı alma
+- Multi-channel visualization (North, East, Up)
+- P/S wave picking with synchronized drag-lines
+- P-wave polarity detection (up/down)
+- Azimuth and back-azimuth, event azimuth
+- S–P distance and epicenter estimation on map
+- File search/filter with P/S status indicators
+- Bulk Excel export
 
-## Hızlı Başlangıç
+## Quick Start
 
-1) Ortamı kurun
+1) Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-2) Örnek verileri `sample_data/` içine ekleyin (.mat)
-- En az 5 kayıt önerilir. İsim önemli değil.
-- Uygulama varsayılan olarak `sample_data/` klasörünü kullanır.
+2) Add your `.mat` files to `sample_data/`
+- At least 5 recordings are recommended
+- The app defaults to `sample_data/` as the data folder
 
-3) Uygulamayı başlatın
+3) Launch the app
 ```bash
 python earthquake_signal_gui.py
 ```
 
-## Ekran Görüntüsü
+## Screenshot
 
-Repository’e kendi görüntünüzü ekleyin ve yolunu aşağıdaki gibi bırakın:
-
-```markdown
 ![GUI Screenshot](assets/screenshot.png)
-```
 
-- Görseli `assets/screenshot.png` olarak eklemeniz yeterli.
+If the image does not render on GitHub, ensure the file exists at `assets/screenshot.png` and is committed.
 
-## Veri Formatı ve Örnekler
+## Data Format
 
-- .mat dosyası yapısı (desteklenen iki varyanttan biri yeterlidir):
-  - `EQ.anEQ.Accel` (Nx3), `EQ.anEQ.Ptime`, `EQ.anEQ.Stime`, `EQ.anEQ.epicenter [lat,lon]`, `EQ.anEQ.statco [lat,lon]`
-  - veya doğrudan `anEQ` altında aynı alanlar
-- Ayrıntı ve alan listesi için: `sample_data/README.md`
+The GUI expects one of the following .mat structures (either is fine):
 
-Notlar:
-- `DEFAULT_FOLDER` kodda `sample_data` olarak ayarlı.
-- `sample_data/*.mat` dosyaları versiyona dahil edilir; onun dışındaki `.mat` dosyaları `.gitignore` ile hariçtir.
+- Under `EQ.anEQ`:
+  - `Accel` (N×3 array for North, East, Up)
+  - `Ptime` (seconds), `Stime` (seconds)
+  - `epicenter` [lat, lon], `statco` [lat, lon]
+- Or directly under `anEQ` the same fields as above
 
-## Dizin Yapısı
+See `sample_data/README.md` for a full field list.
+
+## Original vs Calculated
+
+The middle panel shows paired values: Original (from metadata) vs Calculated (from signal and picks). Briefly:
+
+- Original Distance (km)
+  - Computed from file metadata epicenter and station coordinates using the haversine formula.
+
+- Original Azimuth / Back Azimuth (deg)
+  - Geographic azimuths between station and epicenter from metadata coordinates.
+  - Azimuth = direction station → epicenter, Back Azimuth = epicenter → station.
+
+- Calculated Azimuth (deg)
+  - From the signal at the P pick using atan2 on the horizontal components:
+    - az_calc = degrees(atan2(East, North)) mapped to [0, 360).
+    - For consistency the GUI uses detrended values shown in the P Y boxes.
+
+- Calculated Back Azimuth (deg)
+  - back_az_calc = (az_calc + 180) mod 360.
+
+- Event Azimuth (Calc.) (deg)
+  - Applies P polarity correction to the calculated azimuth:
+    - If P polarity = down (compression): event_az = az_calc
+    - If P polarity = up (dilation): event_az = back_az_calc
+    - If unknown: shown as “-”.
+
+- S–P Distance (km)
+  - Derived from S–P time and user-specified velocities Vp and Vs:
+    - d = (Stime − Ptime) × (Vp × Vs) / (Vp − Vs)
+
+Notes:
+- Changing Vp/Vs immediately updates S–P Distance and the map epicenter prediction.
+- Moving P/S picks updates the calculated azimuths and P polarity.
+
+## Directory Structure
 
 ```
 .
-├── earthquake_signal_gui.py    # Ana GUI uygulaması
-├── requirements.txt            # Bağımlılıklar
-├── README.md                   # Bu dosya
-├── LICENSE                     # MIT Lisansı
-├── .gitignore                  # Git ignore
+├── earthquake_signal_gui.py      # Main GUI
+├── requirements.txt              # Dependencies
+├── README.md                     # This page
+├── LICENSE                       # MIT License
+├── .gitignore                    # Git ignore rules
 ├── assets/
-│   └── (screenshot.png)        # Ekran görüntüsü (siz ekleyeceksiniz)
+│   └── screenshot.png            # Screenshot (you added this)
 ├── sample_data/
-│   └── README.md               # Veri formatı açıklaması
-└── (earthquake_analysis_results.xlsx)  # Çıktı, git tarafından ignore
+│   └── README.md                 # Data format notes
+└── (earthquake_analysis_results.xlsx)  # Output, ignored by git
 ```
 
-## Teknik Notlar
+## Troubleshooting
 
-- Harita çizimi için `cartopy` kullanılır. İlk açılışta `turkey_map.png` dosyası oluşturulur/güncellenir.
-- Excel çıktı: çalışma dizinine `earthquake_analysis_results.xlsx` olarak kaydedilir.
-- P/ S seçimleri `.mat` içindeki `anEQ` yapısına yazılabilir (Save Ptime / Save Stime).
+- Map not showing: verify `cartopy` install and system libs (GEOS/PROJ). On macOS:
+  ```bash
+  brew install geos proj
+  ```
+- No files listed: `.mat` files must be under `sample_data/` with the expected fields.
+- Excel button produces no file: check write permissions and `openpyxl` is installed.
 
-## Roadmap
+## License
 
-- Çoklu istasyon karşılaştırma görünümü
-- Gelişmiş filtreleme ve bant sınırlama seçenekleri
-- Farklı hız modelleri ve S-P mesafesi için konfigürasyon profilleri
-- Hafif veri önizleme (devasa .mat dosyalarında)
-
-## FAQ
-
-- Harita görünmüyor: `cartopy` kurulumunu ve PROJ/GEOS bağımlılıklarını kontrol edin.
-- Dosya listesi boş: `.mat` dosyaları `sample_data/` klasöründe olmalı ve doğru alanlara sahip olmalı.
-- Excel butonu sonuç üretmiyor: Yazma izni ve bağımlılıkları (`openpyxl`) kontrol edin.
-
----
-
-## English Summary
-
-An interactive GUI for earthquake signal analysis from MATLAB (.mat) files. Provides P/S picking, polarity, azimuth, epicenter estimation on a Turkey map, and Excel export.
-
-- Multi-channel visualization (N/E/U)
-- P/S picking with synchronized cursors
-- P polarity and event azimuth
-- S-P distance and epicenter estimation
-- Search/filter with P/S status
-- Excel export
-
-Quick start:
-```bash
-pip install -r requirements.txt
-python earthquake_signal_gui.py
-```
-Add your `.mat` files into `sample_data/` and an optional screenshot at `assets/screenshot.png`.
+MIT. See [LICENSE](LICENSE).
